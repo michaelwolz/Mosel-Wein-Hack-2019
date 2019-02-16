@@ -1,4 +1,4 @@
-import video_analysis
+import frames
 
 
 def main():
@@ -6,7 +6,7 @@ def main():
 
 
 def run_video_analysis():
-    va = video_analysis.VideoAnalysis()
+    va = frames.VideoAnalysis()
     va.run("data/RGB/video_rgb-13_09_2017-09_56.avi")
 
 
