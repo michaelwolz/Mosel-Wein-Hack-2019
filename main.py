@@ -1,5 +1,13 @@
+import video_analysis
+
+
 def main():
-    pass
+    run_video_analysis()
+
+
+def run_video_analysis():
+    va = video_analysis.VideoAnalysis()
+    va.run("data/RGB/video_rgb-13_09_2017-09_56.avi")
 
 
 if __name__ == '__main__':
