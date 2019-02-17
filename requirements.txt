@@ -2,3 +2,6 @@ numpy
 scikit-learn
 opencv-python
 pillow
+keras
+imutils
+matplotlib
