@@ -1,4 +1,5 @@
 import cv2
+from keras.models import load_model
 import numpy as np
 
 BLUE = (255, 0, 0)
@@ -7,6 +8,10 @@ GREEN = (0, 255, 0)
 FONTSCALE = 1
 LINETYPE = 2
 FONT = cv2.FONT_HERSHEY_SIMPLEX
+
+# Loading pre-trained AI model
+model = load_model("data/model_2c.h5")
+# model = load_model("data/grapes_model_adam.h5")
 
 
 class VideoAnalysis:
@@ -17,9 +22,7 @@ class VideoAnalysis:
     frame_counter = 0
     bw_array = [0, 0, 0, 0]
 
-    def __init__(self):
-        pass
-
+    # First solution using black and white pixel ratio for region of interest
     def run(self, path):
         print("Running video analysis...")
         cap = cv2.VideoCapture(path)
@@ -65,8 +68,9 @@ class VideoAnalysis:
                     self.write_to_image(orig_frame, "Machine running " + str(np.round(bw_ratio)), GREEN)
 
                 # Show video
+                orig_frame = cv2.resize(orig_frame, (0, 0), fx=0.70, fy=0.70)
                 cv2.imshow('VideoAnalysis', orig_frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
             else:
                 break
@@ -75,6 +79,7 @@ class VideoAnalysis:
         cap.release()
         cv2.destroyAllWindows()
 
+    # Trying to use flickering blue light to be more resistant against lightning changes
     def run_version_2(self, path):
         print("Running video analysis...")
         frame_counter = 0
@@ -133,7 +138,83 @@ class VideoAnalysis:
                 frame_counter += 1
 
                 # Show video
+                orig_frame = cv2.resize(orig_frame, (0, 0), fx=0.70, fy=0.70)
                 cv2.imshow('VideoAnalysis', orig_frame)
+                if cv2.waitKey(25) & 0xFF == ord('q'):
+                    break
+            else:
+                break
+
+        # Cleanup
+        cap.release()
+        cv2.destroyAllWindows()
+
+    # Use ai model for finding "Stickels"
+    def run_ai_version(self, path):
+        print("Running video analysis...")
+        cap = cv2.VideoCapture(path)
+
+        if not cap.isOpened():
+            raise IOError("Error opening video file")
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                height, width, _ = frame.shape
+                # Set bottomLeftCorner
+                self.bottomLeftCornerOfText = (int(width / 2) - 200, height - 50)
+
+                if self.check_image(frame):
+                    self.start_counter += 1
+                    self.stop_counter = 0
+                    if self.stopped and self.start_counter > 2:
+                        self.start_signal()
+                else:
+                    self.start_counter = 0
+                    self.stop_counter += 1
+                    if not self.stopped and self.stop_counter > 2:
+                        self.stop_signal()
+
+                if self.stopped:
+                    self.write_to_image(frame, "Machine stopped", RED)
+                else:
+                    self.write_to_image(frame, "Machine running", GREEN)
+
+                # Show video
+                frame = cv2.resize(frame, (0, 0), fx=0.70, fy=0.70)
+                cv2.imshow('VideoAnalysis', frame)
+                if cv2.waitKey(25) & 0xFF == ord('q'):
+                    break
+            else:
+                break
+
+        # Cleanup
+        cap.release()
+        cv2.destroyAllWindows()
+
+    # Using grape model to identify grapes (in blue light)
+    def grape_recognition(self, path):
+        print("Running video analysis...")
+        cap = cv2.VideoCapture(path)
+
+        if not cap.isOpened():
+            raise IOError("Error opening video file")
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                height, width, _ = frame.shape
+                # Set bottomLeftCorner
+                self.bottomLeftCornerOfText = (int(width / 2) - 200, height - 50)
+
+                if self.grape_in_blue_light(frame):
+                    self.write_to_image(frame, "No Grape", RED)
+                else:
+                    self.write_to_image(frame, "Grape", GREEN)
+
+                # Show video
+                frame = cv2.resize(frame, (0, 0), fx=0.90, fy=0.90)
+                cv2.imshow('VideoAnalysis', frame)
                 if cv2.waitKey(50) & 0xFF == ord('q'):
                     break
             else:
@@ -158,3 +239,19 @@ class VideoAnalysis:
                     FONTSCALE,
                     color,
                     LINETYPE)
+
+    # For Stickel
+    def check_image(self, image):
+        image = cv2.resize(image, (32, 32)).flatten()
+        image = image.reshape((1, image.shape[0]))
+        image = image.astype("float") / 255.0
+        preds = model.predict(image)
+        return preds[0][0] > 0.5
+
+    # For finding grapes (same function as check_image though)
+    def grape_in_blue_light(self, image):
+        image = cv2.resize(image, (32, 32)).flatten()
+        image = image.reshape((1, image.shape[0]))
+        image = image.astype("float") / 255.0
+        preds = model.predict(image)
+        return preds[0][0] > 0.5

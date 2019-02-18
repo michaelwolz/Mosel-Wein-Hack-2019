@@ -1,13 +1,10 @@
 from keras.models import load_model
-import argparse
-import pickle
 import cv2
 
 model = load_model("data/model_2c.h5")
 
 # load the input image and resize it to the target spatial dimensions
 image = cv2.imread("data/test.png")
-output = image.copy()
 image = cv2.resize(image, (32, 32)).flatten()
 
 image = image.reshape((1, image.shape[0]))

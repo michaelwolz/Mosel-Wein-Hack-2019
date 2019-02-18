@@ -5,3 +5,4 @@ pillow
 keras
 imutils
 matplotlib
+tensorflow
