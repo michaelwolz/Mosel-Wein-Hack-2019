@@ -1,4 +1,4 @@
-import video_analysis
+import VideoAnalysis
 
 
 def main():
@@ -6,10 +6,8 @@ def main():
 
 
 def run_video_analysis():
-    va = video_analysis.VideoAnalysis()
-    va.run_version_2("data/RGB/video_rgb-13_09_2017-09_56.avi")
-    # va.run_version_2("data/RGB/video_rgb-13_09_2017-09_56.avi")
-    # va.run_version_2("data/RGB/video_rgb-13_09_2017-09_56.avi")
+    va = VideoAnalysis.VideoAnalysis()
+    va.run_ai_version("data/RGB/video_rgb-13_09_2017-10_02.avi")
 
 
 if __name__ == '__main__':
